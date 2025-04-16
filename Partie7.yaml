@@ -32,7 +32,7 @@
     # Télécharger et extraire WIKIMEDIA
     - name: Télécharger WIKIMEDIA
       ansible.builtin.get_url:
-        url: "https://releases.wikimedia.org/wikimedia/1.41/wikimedia-1.41.0.tar.gz"
+        url: "https://releases.wikimedia.org/mediawiki/1.41/wikimedia-1.41.0.tar.gz"
         dest: "/tmp/wikimedia.tar.gz"
 
     - name: Extraire wikimedia
@@ -81,10 +81,10 @@
     - name: Installer wikimedia
       ansible.builtin.command:
         cmd: >
-          php maintenance/install.php --dbname wikimedia --dbserver localhost 
+          php maintenance/install.php --dbname mediawiki --dbserver localhost 
           --dbuser wikiuser --dbpass wikipass --installdbuser root 
           --scriptpath /wikimedia --pass adminpass "My Wiki" "admin"
-        chdir: /var/www/html/wikimedia
+        chdir: /var/www/html/mediawiki
 
   handlers:
     - name: Restart Apache
