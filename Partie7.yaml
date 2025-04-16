@@ -1,10 +1,10 @@
 ---
-- name: Installer et configurer WIKIMEDIA
+- name: Installer et configurer MediaWiki
   hosts: webserver
   become: yes
 
   tasks:
-    # Installer Apache, PHP et MariaDB
+    # 1️ Installer Apache, PHP et MariaDB
     - name: Installer Apache, PHP et MariaDB
       ansible.builtin.yum:
         name:
@@ -29,61 +29,61 @@
         - httpd
         - mariadb
 
-    # Télécharger et extraire WIKIMEDIA
-    - name: Télécharger WIKIMEDIA
+    # 2️ Télécharger et extraire MediaWiki
+    - name: Télécharger MediaWiki
       ansible.builtin.get_url:
-        url: "https://releases.wikimedia.org/mediawiki/1.41/wikimedia-1.41.0.tar.gz"
-        dest: "/tmp/wikimedia.tar.gz"
+        url: "https://releases.wikimedia.org/mediawiki/1.41/mediawiki-1.41.0.tar.gz"
+        dest: "/tmp/mediawiki.tar.gz"
 
-    - name: Extraire wikimedia
+    - name: Extraire MediaWiki
       ansible.builtin.unarchive:
-        src: "/tmp/wikimedia.tar.gz"
+        src: "/tmp/mediawiki.tar.gz"
         dest: "/var/www/html/"
         remote_src: yes
 
-    - name: Renommer le dossier wikimedia
+    - name: Renommer le dossier MediaWiki
       ansible.builtin.command:
-        cmd: "mv /var/www/html/wikimedia-* /var/www/html/wikimedia"
+        cmd: "mv /var/www/html/mediawiki-* /var/www/html/mediawiki"
       args:
-        creates: "/var/www/html/wikimedia"
+        creates: "/var/www/html/mediawiki"
 
-    # Configurer Apache
-    - name: Configurer Apache pour wikimedia
+    # 3️ Configurer Apache
+    - name: Configurer Apache pour MediaWiki
       ansible.builtin.copy:
         content: |
           <VirtualHost *:80>
-              DocumentRoot "/var/www/html/wikimedia"
-              <Directory "/var/www/html/wikimedia">
+              DocumentRoot "/var/www/html/mediawiki"
+              <Directory "/var/www/html/mediawiki">
                   AllowOverride All
                   Require all granted
               </Directory>
           </VirtualHost>
-        dest: /etc/httpd/conf.d/wikimedia.conf
+        dest: /etc/httpd/conf.d/mediawiki.conf
         mode: '0644'
       notify: Restart Apache
 
-    # Configurer MariaDB pour wikimedia
-    - name: Créer la base de données wikimedia
+    # 4️ Configurer MariaDB pour MediaWiki
+    - name: Créer la base de données MediaWiki
       ansible.builtin.mysql_db:
-        name: wikimedia
+        name: mediawiki
         state: present
         login_user: root
 
-    - name: Créer l'utilisateur MySQL pour WIKIMEDIA
+    - name: Créer l'utilisateur MySQL pour MediaWiki
       ansible.builtin.mysql_user:
         name: wikiuser
         password: "wikipass"
-        priv: "wikimedia.*:ALL"
+        priv: "mediawiki.*:ALL"
         state: present
         login_user: root
 
-    # Installer wikimedia via install.php
-    - name: Installer wikimedia
+    # 5️ Installer MediaWiki via install.php
+    - name: Installer MediaWiki
       ansible.builtin.command:
         cmd: >
           php maintenance/install.php --dbname mediawiki --dbserver localhost 
           --dbuser wikiuser --dbpass wikipass --installdbuser root 
-          --scriptpath /wikimedia --pass adminpass "My Wiki" "admin"
+          --scriptpath /mediawiki --pass adminpass "My Wiki" "admin"
         chdir: /var/www/html/mediawiki
 
   handlers:
