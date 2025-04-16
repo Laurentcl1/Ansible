@@ -29,10 +29,10 @@
         - httpd
         - mariadb
 
-    # Télécharger et extraire WIKIEMDIA
-    - name: Télécharger WIKIEMDIA
+    # Télécharger et extraire WIKIMEDIA
+    - name: Télécharger WIKIMEDIA
       ansible.builtin.get_url:
-        url: "https://releases.wikimedia.org/wikimedia/1.41/mediawiki-1.41.0.tar.gz"
+        url: "https://releases.wikimedia.org/wikimedia/1.41/wikimedia-1.41.0.tar.gz"
         dest: "/tmp/wikimedia.tar.gz"
 
     - name: Extraire wikimedia
