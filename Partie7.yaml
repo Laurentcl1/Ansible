@@ -1,0 +1,93 @@
+---
+- name: Installer et configurer WIKIEMDIA
+  hosts: webserver
+  become: yes
+
+  tasks:
+    # 1️⃣ Installer Apache, PHP et MariaDB
+    - name: Installer Apache, PHP et MariaDB
+      ansible.builtin.yum:
+        name:
+          - httpd
+          - php
+          - php-mysqlnd
+          - php-cli
+          - php-gd
+          - php-xml
+          - php-intl
+          - php-mbstring
+          - mariadb-server
+          - mariadb
+        state: present
+
+    - name: Activer et démarrer Apache et MariaDB
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - httpd
+        - mariadb
+
+    # 2️⃣ Télécharger et extraire WIKIEMDIA
+    - name: Télécharger WIKIEMDIA
+      ansible.builtin.get_url:
+        url: "https://releases.wikimedia.org/wikimedia/1.41/mediawiki-1.41.0.tar.gz"
+        dest: "/tmp/wikimedia.tar.gz"
+
+    - name: Extraire wikimedia
+      ansible.builtin.unarchive:
+        src: "/tmp/wikimedia.tar.gz"
+        dest: "/var/www/html/"
+        remote_src: yes
+
+    - name: Renommer le dossier wikimedia
+      ansible.builtin.command:
+        cmd: "mv /var/www/html/wikimedia-* /var/www/html/wikimedia"
+      args:
+        creates: "/var/www/html/wikimedia"
+
+    # 3️⃣ Configurer Apache
+    - name: Configurer Apache pour wikimedia
+      ansible.builtin.copy:
+        content: |
+          <VirtualHost *:80>
+              DocumentRoot "/var/www/html/wikimedia"
+              <Directory "/var/www/html/wikimedia">
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+        dest: /etc/httpd/conf.d/wikimedia.conf
+        mode: '0644'
+      notify: Restart Apache
+
+    # 4️⃣ Configurer MariaDB pour wikimedia
+    - name: Créer la base de données wikimedia
+      ansible.builtin.mysql_db:
+        name: wikimedia
+        state: present
+        login_user: root
+
+    - name: Créer l'utilisateur MySQL pour WIKIEMDIA
+      ansible.builtin.mysql_user:
+        name: wikiuser
+        password: "wikipass"
+        priv: "wikimedia.*:ALL"
+        state: present
+        login_user: root
+
+    # 5️⃣ Installer wikimedia via install.php
+    - name: Installer wikimedia
+      ansible.builtin.command:
+        cmd: >
+          php maintenance/install.php --dbname mediawiki --dbserver localhost 
+          --dbuser wikiuser --dbpass wikipass --installdbuser root 
+          --scriptpath /wikimedia --pass adminpass "My Wiki" "admin"
+        chdir: /var/www/html/wikimedia
+
+  handlers:
+    - name: Restart Apache
+      ansible.builtin.systemd:
+        name: httpd
+        state: restarted

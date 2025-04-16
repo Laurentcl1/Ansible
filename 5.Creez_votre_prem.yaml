@@ -1,0 +1,50 @@
+# tasks/main.yml
+---
+- name: Installer Apache
+  apt:
+    name: apache2
+    state: present
+
+- name: Installer PHP
+  apt:
+    name: php
+    state: present
+
+- name: Copier la configuration Apache pour PHP
+  template:
+    src: apache.conf.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+  notify: Redémarrer Apache
+
+# handlers/main.yml
+---
+- name: Redémarrer Apache
+  service:
+    name: apache2
+    state: restarted
+
+# templates/apache.conf.j2
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch ".php$">
+        SetHandler application/x-httpd-php
+    </FilesMatch>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+# defaults/main.yml
+---
+php_version: "php"
+
+# meta/main.yml
+---
+dependency: []
