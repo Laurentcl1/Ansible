@@ -4,7 +4,7 @@
   become: yes
 
   tasks:
-    # 1️⃣ Installer Apache, PHP et MariaDB
+    # Installer Apache, PHP et MariaDB
     - name: Installer Apache, PHP et MariaDB
       ansible.builtin.yum:
         name:
@@ -29,7 +29,7 @@
         - httpd
         - mariadb
 
-    # 2️⃣ Télécharger et extraire WIKIEMDIA
+    # Télécharger et extraire WIKIEMDIA
     - name: Télécharger WIKIEMDIA
       ansible.builtin.get_url:
         url: "https://releases.wikimedia.org/wikimedia/1.41/mediawiki-1.41.0.tar.gz"
@@ -47,7 +47,7 @@
       args:
         creates: "/var/www/html/wikimedia"
 
-    # 3️⃣ Configurer Apache
+    # Configurer Apache
     - name: Configurer Apache pour wikimedia
       ansible.builtin.copy:
         content: |
@@ -62,7 +62,7 @@
         mode: '0644'
       notify: Restart Apache
 
-    # 4️⃣ Configurer MariaDB pour wikimedia
+    # Configurer MariaDB pour wikimedia
     - name: Créer la base de données wikimedia
       ansible.builtin.mysql_db:
         name: wikimedia
@@ -77,7 +77,7 @@
         state: present
         login_user: root
 
-    # 5️⃣ Installer wikimedia via install.php
+    # Installer wikimedia via install.php
     - name: Installer wikimedia
       ansible.builtin.command:
         cmd: >
